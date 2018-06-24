@@ -1,0 +1,27 @@
+<Project DefaultTargets="GenerateMsi" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="$(MSBuildExtensionsPath)\BtsMsiTask\BtsMsiTask.targets" />
+ 
+	<PropertyGroup>
+		<DestinationPath>$(BUILD_STAGINGDIRECTORY)</DestinationPath>
+		<ApplicationName>Shared</ApplicationName>
+		<ApplicationDescription></ApplicationDescription>
+		<SolutionName>$(ApplicationName)</SolutionName>
+		<SourceLocation>$(build_artifactstagingdirectory)\Src\EDIFactSchemaCustomizer\bin\$(buildConfiguration)</SourceLocation>		
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Resource Include="$(SourceLocation)\BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.dll" />
+	</ItemGroup>
+
+  <Target Name="GenerateMsi">
+    <MsiTask ApplicationDescription="$(ApplicationDescription)"
+             Version="$(Version)"
+             FileName="Deploy.msi"
+             DestinationPath="$(DestinationPath)"
+             SourceLocation="$(SourceLocation)"
+             ApplicationName="$(ApplicationName)"
+             BtsAssemblies="@(BtsAssembly)"
+             Resources="@(Resource)"
+             ReferenceApplications="@(ReferenceApplication)" />
+  </Target>
+</Project> 

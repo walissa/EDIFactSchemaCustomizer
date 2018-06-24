@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.Tests.UnitTests", "Tests\UnitTests\BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.Tests.UnitTests.csproj", "{A554FDD3-7800-4A61-8501-06FCE5768B7C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer", "src\EDIFactSchemaCustomizer\BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.csproj", "{12E418FA-FDF9-49AC-9EF6-F5C2BC96BE19}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{5AF13B3D-DCA1-4EED-9F3A-ACAA4650AD5C}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Build.proj = Build\Build.proj
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A554FDD3-7800-4A61-8501-06FCE5768B7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A554FDD3-7800-4A61-8501-06FCE5768B7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A554FDD3-7800-4A61-8501-06FCE5768B7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A554FDD3-7800-4A61-8501-06FCE5768B7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12E418FA-FDF9-49AC-9EF6-F5C2BC96BE19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12E418FA-FDF9-49AC-9EF6-F5C2BC96BE19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12E418FA-FDF9-49AC-9EF6-F5C2BC96BE19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12E418FA-FDF9-49AC-9EF6-F5C2BC96BE19}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
