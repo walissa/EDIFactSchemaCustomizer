@@ -2,14 +2,14 @@
 <package >
   <metadata>
     <id>BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer</id>
-    <version>1.0.1</version>
+    <version>$version$</version>
     <title>EDIFact Schema Customizer</title>
     <authors>waal</authors>
     <owners>waal</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>This component allows you to use custom EDIFact schema by adding custom value to UNH2.5</description>    
   </metadata>
-  <files>
-    <file src="\bin\release\BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.dll" target="lib\net45"/>
-  </files>
+  <!--<files>
+    <file src="bin\release\BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer.dll" target="lib\net45"/>
+  </files>-->
 </package>

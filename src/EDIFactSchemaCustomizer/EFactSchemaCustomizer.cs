@@ -39,7 +39,7 @@ namespace BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer
         [Description("e.g. EFACT_D96A_ORDERS_CUSTOM")]
         [DisplayName("Root Node Extension"), RequiredRuntime]
         public string RootNodeExtension { get; set; }
-        
+
         private string del_SuffixSigTerm;
         private Dictionary<string, char> delimiters = new Dictionary<string, char>();
 
@@ -54,33 +54,17 @@ namespace BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer
             {
                 throw new ArgumentException(errorMessage);
             }
-            Encoding encoder = string.IsNullOrEmpty(CharSet) ? Encoding.Default : Encoding.GetEncoding(CharSet);
-            var match = Regex.Match(EfactDelimiters, @"^(?:\s*(0x[0-9a-fA-F]{2})\s*(?:,|$)){6,8}");
-            delimiters["Component"] = (char)Convert.ToInt32(match.Groups[1].Captures[0].Value, 16);
-            delimiters["DataElement"] = (char)Convert.ToInt32(match.Groups[1].Captures[1].Value, 16);
-            delimiters["DecimalNotation"] = (char)Convert.ToInt32(match.Groups[1].Captures[2].Value, 16);
-            delimiters["ReleaseIndicator"] = (char)Convert.ToInt32(match.Groups[1].Captures[3].Value, 16);
-            delimiters["RepetitionSeparator"] = (char)Convert.ToInt32(match.Groups[1].Captures[4].Value, 16);
-            delimiters["SigmentTerminator"] = (char)Convert.ToInt32(match.Groups[1].Captures[5].Value, 16);
-            del_SuffixSigTerm = "";
-            if (match.Groups[1].Captures.Count > 6)
-            {
-                del_SuffixSigTerm += (char)Convert.ToInt32(match.Groups[1].Captures[6].Value, 16);
-                if (match.Groups[1].Captures.Count > 7)
-                    del_SuffixSigTerm += (char)Convert.ToInt32(match.Groups[1].Captures[7].Value, 16);
-            }
-
             Stream origStream = pInMsg.BodyPart.GetOriginalDataStream();
+            Encoding encoder = string.IsNullOrEmpty(CharSet) ? Encoding.Default : Encoding.GetEncoding(CharSet);
             StreamReader reader = new StreamReader(origStream, encoder);
 
             char ch;
             bool UNASeg = false;
             StringBuilder sb = new StringBuilder();
+            #region Check for UNA segment and extract delimiters
             char[] buff = new char[3];
-            //Read the first segment, if it is UNA segment then update delimiters.
             reader.ReadBlock(buff, 0, buff.Length);
-            sb.Append(buff);
-            UNASeg = sb.ToString().StartsWith("UNA");
+            sb.Append(buff); UNASeg = sb.ToString().StartsWith("UNA");
             if (UNASeg)
             {
                 buff = new char[6];
@@ -113,21 +97,27 @@ namespace BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer
                 }
                 del_SuffixSigTerm = new string(suffix_SegmentTerminator.ToArray());
             }
-            string segment = "";
+            else
+                ReadDelimitersFromProperty();
+            #endregion
+
             MemoryStream ms = new MemoryStream();
-            StreamWriter writer = new StreamWriter(ms, encoder);
+            StreamWriter writer = new StreamWriter(ms, encoder);            
             writer.NewLine = del_SuffixSigTerm;
+
             bool readLines = !string.IsNullOrEmpty(del_SuffixSigTerm);
             if (UNASeg)
             {
                 writer.WriteSegment(sb.ToString(), readLines);
                 sb.Clear();
             }
+
             bool eos = false; //end of segement;
             while (reader.Peek() >= 0)
             {
+                string segment = "";
                 if (readLines)
-                    segment = reader.ReadLine();
+                    sb.Append(reader.ReadLine());
                 else
                 {
                     ch = (char)reader.Read();
@@ -136,26 +126,12 @@ namespace BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer
                 }
                 if (eos | readLines)
                 {
-                    if (eos)
-                    {
-                        segment = sb.ToString();
-                        sb.Clear();
-                        eos = false;
-                    }
+                    segment = sb.ToString();
+                    sb.Clear();
+                    eos = false;
                     if (segment.StartsWith("UNH"))
-                    {
-                        segment = segment.Remove(segment.Length - 1);
-                        string[] components = segment.Split(delimiters["DataElement"]);
-                        List<string> elements = new List<string>(components[2].Split(delimiters["Component"]));
-                        while (elements.Count < 5)
-                            elements.Add(string.Empty);
-                        elements[4] = RootNodeExtension;
-                        components[2] = string.Join(delimiters["Component"].ToString(), elements);
-                        segment = string.Join(delimiters["DataElement"].ToString(), components);
-                        segment += delimiters["SigmentTerminator"];
-                    }
+                        segment = InjectUNH25(segment);
                     writer.WriteSegment(segment, readLines);
-                    segment = "";
                 }
             }
             writer.Flush();
@@ -166,8 +142,39 @@ namespace BizTalkComponents.PipelineComponents.EDIFactSchemaCustomizer
             return pInMsg;
         }
 
+        private void ReadDelimitersFromProperty()
+        {
+            var match = Regex.Match(EfactDelimiters, @"^(?:\s*(0x[0-9a-fA-F]{2})\s*(?:,|$)){6,8}");
+            delimiters["Component"] = (char)Convert.ToInt32(match.Groups[1].Captures[0].Value, 16);
+            delimiters["DataElement"] = (char)Convert.ToInt32(match.Groups[1].Captures[1].Value, 16);
+            delimiters["DecimalNotation"] = (char)Convert.ToInt32(match.Groups[1].Captures[2].Value, 16);
+            delimiters["ReleaseIndicator"] = (char)Convert.ToInt32(match.Groups[1].Captures[3].Value, 16);
+            delimiters["RepetitionSeparator"] = (char)Convert.ToInt32(match.Groups[1].Captures[4].Value, 16);
+            delimiters["SigmentTerminator"] = (char)Convert.ToInt32(match.Groups[1].Captures[5].Value, 16);
+            del_SuffixSigTerm = "";
+            if (match.Groups[1].Captures.Count > 6)
+            {
+                del_SuffixSigTerm += (char)Convert.ToInt32(match.Groups[1].Captures[6].Value, 16);
+                if (match.Groups[1].Captures.Count > 7)
+                    del_SuffixSigTerm += (char)Convert.ToInt32(match.Groups[1].Captures[7].Value, 16);
+            }
+        }
 
+        private string InjectUNH25(string segment)
+        {
+            segment = segment.Remove(segment.Length - 1);
+            string[] components = segment.Split(delimiters["DataElement"]);
+            List<string> elements = new List<string>(components[2].Split(delimiters["Component"]));
+            while (elements.Count < 5)
+                elements.Add(string.Empty);
+            elements[4] = RootNodeExtension;
+            components[2] = string.Join(delimiters["Component"].ToString(), elements);
+            segment = string.Join(delimiters["DataElement"].ToString(), components);
+            segment += delimiters["SigmentTerminator"];
+            return segment;
+        }
     }
+
     public static class extensions
     {
         public static void WriteSegment(this StreamWriter writer, string segment, bool writeLine)
